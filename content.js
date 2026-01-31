@@ -5,7 +5,7 @@
 
 console.log("[Content] Script injected into YouTube");
 
-let muteEnabled = true;
+let muteEnabled = false;  // ✅ DEFAULT STATE: OFF
 const AD_CHECK_INTERVAL = 500; // Check every 500ms for ads
 
 // ============================================================================
@@ -20,8 +20,8 @@ chrome.runtime.sendMessage(
             muteEnabled = response.enabled;
             console.log("[Content] Initial mute state loaded:", muteEnabled);
         } else {
-            console.log("[Content] Using default state (ON)");
-            muteEnabled = true;
+            console.log("[Content] Using default state (OFF)");  // ✅ CHANGED
+            muteEnabled = false;  // ✅ DEFAULT STATE: OFF
         }
     }
 );

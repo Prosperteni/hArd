@@ -1,4 +1,4 @@
-    /**
+/**
      * YouTube Smart Mute - Enhanced Background Service Worker
      * Handles state management, messaging, and cross-tab communication
      */
@@ -11,7 +11,7 @@
             settings: 'youtubeMute_settings'
         },
         defaults: {
-            enabled: true,
+            enabled: false,  // ✅ DEFAULT STATE: OFF
             muteAds: true,
             muteOtherVideos: false,
             logStats: true
@@ -26,7 +26,7 @@
             // Set defaults if not already set
             if (!storage[CONFIG.storage.enabled]) {
                 await chrome.storage.local.set({
-                    [CONFIG.storage.enabled]: CONFIG.defaults.enabled,
+                    [CONFIG.storage.enabled]: CONFIG.defaults.enabled,  // ✅ DEFAULT: false (OFF)
                     [CONFIG.storage.settings]: {
                         muteAds: CONFIG.defaults.muteAds,
                         muteOtherVideos: CONFIG.defaults.muteOtherVideos,
@@ -40,7 +40,7 @@
                 });
             }
             
-            console.log('YouTube Smart Mute initialized');
+            console.log('YouTube Smart Mute initialized - Default state: OFF');
         } catch (error) {
             console.error('Error initializing extension:', error);
         }
@@ -94,7 +94,7 @@
     // Handler functions
     async function handleGetState(sendResponse) {
         const storage = await chrome.storage.local.get(CONFIG.storage.enabled);
-        const enabled = storage[CONFIG.storage.enabled] ?? CONFIG.defaults.enabled;
+        const enabled = storage[CONFIG.storage.enabled] ?? CONFIG.defaults.enabled;  // ✅ DEFAULT: false (OFF)
         sendResponse({ 
             enabled: enabled,
             timestamp: Date.now()
@@ -195,7 +195,7 @@
         if (!tab.url?.includes('youtube.com')) return;
         
         const storage = await chrome.storage.local.get(CONFIG.storage.enabled);
-        const currentState = storage[CONFIG.storage.enabled] ?? CONFIG.defaults.enabled;
+        const currentState = storage[CONFIG.storage.enabled] ?? CONFIG.defaults.enabled;  // ✅ DEFAULT: false (OFF)
         const newState = !currentState;
         
         await chrome.storage.local.set({ [CONFIG.storage.enabled]: newState });
@@ -211,4 +211,4 @@
         }
     });
 
-    console.log('YouTube Smart Mute background service worker loaded');
+    console.log('YouTube Smart Mute background service worker loaded - Default state: OFF');
