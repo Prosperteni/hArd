@@ -19,9 +19,13 @@ function updateStatus(isOn) {
 updateStatus(true);
 
 onButton.onclick = function() {
+    chrome.runtime.sendMessage({ event: 'started' });
     updateStatus(true);
 };
 
 offButton.onclick = function() {
+    chrome.runtime.sendMessage({ event: 'stopped' });
     updateStatus(false);
 };
+
+

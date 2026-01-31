@@ -1,10 +1,20 @@
-chrome.runtime.onMessage.addListner(data => {
-    switch(data.event) {
+chrome.runtime.onInstalled.addListener(details => {
+    console.log("Extension installed:", details.reason);
+});
+
+
+
+chrome.runtime.onMessage.addListener(data => { 
+    switch (data.event) {
         case 'onStop':
+            console.log("stopped");
             break;
+
         case 'onStart':
+            console.log("started");
             break;
+
         default:
-            break;
+            console.log("unknown event:", data);
     }
-})
+});
