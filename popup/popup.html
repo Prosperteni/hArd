@@ -2,74 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>hArd</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <title>YouTube Smart Mute</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
             width: 280px;
-            height: 360px;
-            background-color: #0f172a;
+            background: #111;
+            color: white;
         }
         .card {
-            background-color: #020617;
+            background: #1a1a1a;
             border: none;
-            border-radius: 16px;
-        }
-        .logo {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #0d6efd;
-            letter-spacing: -1px;
-        }
-        .subtitle {
-            font-size: 0.8rem;
-            color: #adb5bd;
         }
         .status {
-            background-color: #052e16;
-            color: #4ade80;
-            font-weight: 600;
-            border-radius: 10px;
-            padding: 0.6rem;
-            font-size: 0.85rem;
-        }
-        .footer {
-            font-size: 0.7rem;
-            color: #6c757d;
+            padding: 10px;
+            border-radius: 8px;
         }
     </style>
 </head>
+<body class="d-flex align-items-center justify-content-center">
 
- <body class="d-flex align-items-center justify-content-center text-light">
+<div class="card shadow-lg p-3 w-100 mx-2 text-center">
+    <h5 class="fw-bold text-light">YouTube Smart Mute</h5>
 
-    <div class="card shadow-lg p-3 w-100 mx-3 text-center">
-        <div class="logo">hArd</div>
-        <div class="subtitle mb-2">YouTube Ad Experience</div>
-
-<div class="status mb-3 p-2 rounded text-light" id="active">
-    🎬 Automatically minimize Ads on YouTube
-</div>
-
-
-        <div class="d-flex gap-2 mb-3">
-            <button class="btn btn-success w-50 fw-semibold" id="on">
-                Turn ON
-            </button>
-
-            <button class="btn btn-danger w-50 fw-semibold" id="off">
-                Turn OFF
-            </button>
-        </div>
-
-        <div class="footer">
-            Works automatically on YouTube videos
-        </div>
+    <div class="status bg-success text-light my-3" id="statusBox">
+        🎬 Ads will be muted
     </div>
 
-</body>
+    <div class="d-flex gap-2">
+        <button class="btn btn-success w-50" id="onBtn">ON</button>
+        <button class="btn btn-danger w-50" id="offBtn">OFF</button>
+    </div>
+</div>
+
 <script src="popup.js"></script>
+</body>
 </html>

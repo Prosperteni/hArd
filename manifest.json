@@ -12,15 +12,18 @@
         "48": "icons/icon48.png",
         "128": "icons/icon128.png"
     },
-    "description": "A brief description of my extension.",
-    "permissions": [
-        "storage",
-        "tabs"
-    ],
+    "description": "Automatically mutes YouTube ads and restores audio for videos.",
+    "permissions": ["activeTab", "scripting", "storage"],
     "background": {
         "service_worker": "background.js",
         "type": "module"
-    }
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://*.youtube.com/*"],
+            "js": ["content.js"]
+        }
+    ]
 
 
 }

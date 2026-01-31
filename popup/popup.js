@@ -1,31 +1,31 @@
-const statusBox = document.getElementById('active');
-const onButton = document.getElementById('on');
-const offButton = document.getElementById('off');
+const statusBox = document.getElementById("statusBox");
+const onBtn = document.getElementById("onBtn");
+const offBtn = document.getElementById("offBtn");
 
-// Function to update the status text + color
-function updateStatus(isOn) {
+// Load saved state when popup opens
+chrome.runtime.sendMessage({ type: "GET_STATE" }, response => {
+    updateUI(response.enabled);
+});
+
+function updateUI(isOn) {
     if (isOn) {
-        statusBox.textContent = '🎬 Automatically minimize Ads on YouTube';
-        statusBox.classList.remove('bg-danger', 'text-light');
-        statusBox.classList.add('bg-success', 'text-light');
+        statusBox.textContent = "🎬 Ads will be muted";
+        statusBox.classList.remove("bg-danger");
+        statusBox.classList.add("bg-success");
     } else {
-        statusBox.textContent = '⏸️ Ads minimization is paused';
-        statusBox.classList.remove('bg-success', 'text-light');
-        statusBox.classList.add('bg-danger', 'text-light');
+        statusBox.textContent = "⏸️ Ads muting paused";
+        statusBox.classList.remove("bg-success");
+        statusBox.classList.add("bg-danger");
     }
 }
 
-// Default state (ON)
-updateStatus(true);
-
-onButton.onclick = function() {
-    chrome.runtime.sendMessage({ event: 'started' });
-    updateStatus(true);
+// Button actions
+onBtn.onclick = () => {
+    chrome.runtime.sendMessage({ type: "SET_STATE", value: true });
+    updateUI(true);
 };
 
-offButton.onclick = function() {
-    chrome.runtime.sendMessage({ event: 'stopped' });
-    updateStatus(false);
+offBtn.onclick = () => {
+    chrome.runtime.sendMessage({ type: "SET_STATE", value: false });
+    updateUI(false);
 };
-
-
