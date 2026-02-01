@@ -30,6 +30,7 @@ It runs entirely on the client side and requires no external servers.
 ---
 
 ## Project Structure?>
+```bash
 hArd/
 │
 ├── manifest.json
@@ -45,7 +46,7 @@ hArd/
 ├── icon32.png
 ├── icon48.png
 └── icon128.png
-
+```
 ---
 
 ## Installation (Developer Mode)?&
