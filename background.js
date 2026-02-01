@@ -11,7 +11,7 @@
             settings: 'youtubeMute_settings'
         },
         defaults: {
-            enabled: false,  // ✅ DEFAULT STATE: OFF
+            enabled: false,
             muteAds: true,
             muteOtherVideos: false,
             logStats: true
@@ -26,7 +26,7 @@
             // Set defaults if not already set
             if (!storage[CONFIG.storage.enabled]) {
                 await chrome.storage.local.set({
-                    [CONFIG.storage.enabled]: CONFIG.defaults.enabled,  // ✅ DEFAULT: false (OFF)
+                    [CONFIG.storage.enabled]: CONFIG.defaults.enabled,
                     [CONFIG.storage.settings]: {
                         muteAds: CONFIG.defaults.muteAds,
                         muteOtherVideos: CONFIG.defaults.muteOtherVideos,
@@ -88,13 +88,13 @@
             }
         })();
         
-        return true; // Keep channel open for async response
+        return true;
     });
 
     // Handler functions
     async function handleGetState(sendResponse) {
         const storage = await chrome.storage.local.get(CONFIG.storage.enabled);
-        const enabled = storage[CONFIG.storage.enabled] ?? CONFIG.defaults.enabled;  // ✅ DEFAULT: false (OFF)
+        const enabled = storage[CONFIG.storage.enabled] ?? CONFIG.defaults.enabled; 
         sendResponse({ 
             enabled: enabled,
             timestamp: Date.now()
@@ -195,7 +195,7 @@
         if (!tab.url?.includes('youtube.com')) return;
         
         const storage = await chrome.storage.local.get(CONFIG.storage.enabled);
-        const currentState = storage[CONFIG.storage.enabled] ?? CONFIG.defaults.enabled;  // ✅ DEFAULT: false (OFF)
+        const currentState = storage[CONFIG.storage.enabled] ?? CONFIG.defaults.enabled;
         const newState = !currentState;
         
         await chrome.storage.local.set({ [CONFIG.storage.enabled]: newState });

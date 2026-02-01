@@ -5,7 +5,7 @@
 
 console.log("[Content] Script injected into YouTube");
 
-let muteEnabled = false;  // ✅ DEFAULT STATE: OFF
+let muteEnabled = false; 
 const AD_CHECK_INTERVAL = 500; // Check every 500ms for ads
 
 // ============================================================================
@@ -20,8 +20,8 @@ chrome.runtime.sendMessage(
             muteEnabled = response.enabled;
             console.log("[Content] Initial mute state loaded:", muteEnabled);
         } else {
-            console.log("[Content] Using default state (OFF)");  // ✅ CHANGED
-            muteEnabled = false;  // ✅ DEFAULT STATE: OFF
+            console.log("[Content] Using default state (OFF)"); 
+            muteEnabled = false; 
         }
     }
 );
@@ -185,7 +185,7 @@ document.addEventListener('play', (e) => {
             }
         }, 100);
     }
-}, true); // Use capture phase
+}, true);
 
 /**
  * Listen for pause events
