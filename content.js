@@ -6,7 +6,7 @@
 console.log("[Content] Script injected into YouTube");
 
 let muteEnabled = false; 
-const AD_CHECK_INTERVAL = 500; // Check every 500ms for ads
+const AD_CHECK_INTERVAL = 1200;
 
 // ============================================================================
 // INITIALIZATION
@@ -121,104 +121,22 @@ function getMainVideoElement() {
  * Handle muting/unmuting based on ad status
  */
 function handleVideoMuting() {
-    if (!muteEnabled) {
-        // If extension is disabled, unmute everything
-        const videos = getVideoElements();
-        videos.forEach(video => {
-            try {
-                if (video.muted) {
-                    video.muted = false;
-                }
-            } catch (error) {
-                console.error("[Content] Error unmuting video:", error);
-            }
-        });
-        return;
+    if (!muteEnabled) return;  // <-- CRITICAL
+
+    const isAd = isAdPlaying();
+    const mainVideo = getMainVideoElement();
+    if (!mainVideo) return;
+
+    if (isAd && !mainVideo.muted) {
+        mainVideo.muted = true;
+        console.log("[Content] Muted because ad detected");
     }
 
-    // Extension is enabled - mute ads, unmute content
-    const isAd = isAdPlaying();
-    const videos = getVideoElements();
-
-    videos.forEach(video => {
-        try {
-            if (!video || !video.parentElement) return;
-
-            // Check if this is the main player
-            const isMainPlayer = video.classList.contains('html5-main-video');
-
-            if (isMainPlayer || videos.length === 1) {
-                if (isAd) {
-                    // Ad is playing - mute
-                    if (!video.muted) {
-                        video.muted = true;
-                        console.log("[Content] ✓ Video muted (ad detected)");
-                    }
-                } else {
-                    // Content is playing - unmute
-                    if (video.muted) {
-                        video.muted = false;
-                        console.log("[Content] ✓ Video unmuted (ad ended)");
-                    }
-                }
-            }
-        } catch (error) {
-            console.error("[Content] Error handling video muting:", error);
-        }
-    });
+    if (!isAd && mainVideo.muted) {
+        console.log("[Content] Leaving mute alone (user controls it)");
+    }
 }
 
-// ============================================================================
-// EVENT LISTENERS
-// ============================================================================
-
-/**
- * Listen for play events to catch ads immediately
- */
-document.addEventListener('play', (e) => {
-    if (e.target && e.target.tagName === 'VIDEO' && muteEnabled) {
-        // Small delay to let the page update
-        setTimeout(() => {
-            if (isAdPlaying()) {
-                e.target.muted = true;
-                console.log("[Content] ✓ Auto-muted on play event (ad detected)");
-            }
-        }, 100);
-    }
-}, true);
-
-/**
- * Listen for pause events
- */
-document.addEventListener('pause', (e) => {
-    if (e.target && e.target.tagName === 'VIDEO' && muteEnabled) {
-        setTimeout(() => {
-            if (!isAdPlaying() && e.target.muted) {
-                e.target.muted = false;
-                console.log("[Content] ✓ Auto-unmuted on pause event");
-            }
-        }, 100);
-    }
-}, true);
-
-/**
- * Listen for timeupdate events (muting changes)
- */
-document.addEventListener('timeupdate', (e) => {
-    if (e.target && e.target.tagName === 'VIDEO' && muteEnabled) {
-        const isAd = isAdPlaying();
-        const shouldBeMuted = isAd;
-        
-        if (e.target.muted !== shouldBeMuted) {
-            e.target.muted = shouldBeMuted;
-            if (shouldBeMuted) {
-                console.log("[Content] ✓ Muted during timeupdate");
-            } else {
-                console.log("[Content] ✓ Unmuted during timeupdate");
-            }
-        }
-    }
-}, true);
 
 // ============================================================================
 // MAIN MONITORING LOOP
