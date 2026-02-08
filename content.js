@@ -121,7 +121,7 @@ function getMainVideoElement() {
  * Handle muting/unmuting based on ad status
  */
 function handleVideoMuting() {
-    if (!muteEnabled) return;  // <-- CRITICAL
+    if (!muteEnabled) return; 
 
     const isAd = isAdPlaying();
     const mainVideo = getMainVideoElement();
@@ -146,13 +146,25 @@ function handleVideoMuting() {
  * Continuous monitoring of ad status
  * Checks every 500ms and mutes/unmutes accordingly
  */
-const monitoringInterval = setInterval(() => {
-    try {
+let monitoringInterval = null;
+
+function startMonitoring() {
+    if (monitoringInterval) return;
+
+    monitoringInterval = setInterval(() => {
         handleVideoMuting();
-    } catch (error) {
-        console.error("[Content] Error in monitoring loop:", error);
+    }, AD_CHECK_INTERVAL);
+
+    console.log("[Content] Monitoring STARTED");
+}
+
+function stopMonitoring() {
+    if (monitoringInterval) {
+        clearInterval(monitoringInterval);
+        monitoringInterval = null;
+        console.log("[Content] Monitoring STOPPED");
     }
-}, AD_CHECK_INTERVAL);
+}
 
 console.log("[Content] ✓ YouTube Smart Mute monitoring active (interval: " + AD_CHECK_INTERVAL + "ms)");
 
