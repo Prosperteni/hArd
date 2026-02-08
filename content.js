@@ -9,32 +9,21 @@ let muteEnabled = false;
 const AD_CHECK_INTERVAL = 1200;
 
 // ============================================================================
-// INITIALIZATION
-// ============================================================================
-
-// Get initial mute state from background script
-chrome.runtime.sendMessage(
-    { type: "GET_STATE" },
-    (response) => {
-        if (response && response.enabled !== undefined) {
-            muteEnabled = response.enabled;
-            console.log("[Content] Initial mute state loaded:", muteEnabled);
-        } else {
-            console.log("[Content] Using default state (OFF)"); 
-            muteEnabled = false; 
-        }
-    }
-);
-
-// ============================================================================
 // MESSAGE LISTENERS
 // ============================================================================
 
-// Listen for state changes from popup or background
+
+// Get initial mute state from background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "STATE_UPDATE") {
         muteEnabled = message.enabled;
-        console.log("[Content] State updated from background:", muteEnabled);
+
+        if (muteEnabled) {
+            startMonitoring();
+        } else {
+            stopMonitoring();
+        }
+
         sendResponse({ status: "ok", currentState: muteEnabled });
     }
     return true;
@@ -195,7 +184,7 @@ const observer = new MutationObserver((mutations) => {
             }
         }
 
-        if (shouldCheck) {
+        if (shouldCheck && muteEnabled) {
             console.log("[Content] DOM change detected, checking for ads...");
             handleVideoMuting();
         }
@@ -236,32 +225,6 @@ window.addEventListener('beforeunload', () => {
     clearInterval(monitoringInterval);
     observer.disconnect();
 });
-
-// ============================================================================
-// FALLBACK: Force unmute if muting is disabled
-// ============================================================================
-
-/**
- * Additional safety check - unmute all videos if extension is disabled
- */
-function ensureUnmutedIfDisabled() {
-    if (!muteEnabled) {
-        const videos = getVideoElements();
-        videos.forEach(video => {
-            try {
-                if (video.muted) {
-                    video.muted = false;
-                }
-            } catch (e) {
-                // Silently ignore
-            }
-        });
-    }
-}
-
-// Run periodically
-setInterval(ensureUnmutedIfDisabled, 2000);
-
 // ============================================================================
 // INITIAL STATUS
 // ============================================================================
