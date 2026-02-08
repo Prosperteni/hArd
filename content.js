@@ -7,23 +7,46 @@ console.log("[Content] Script injected into YouTube");
 
 let muteEnabled = false; 
 const AD_CHECK_INTERVAL = 1200;
+let extensionMutedIt = false; // ← NEW: Track if extension muted the video
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+// Get initial mute state from background script
+chrome.runtime.sendMessage(
+    { type: "GET_STATE" },
+    (response) => {
+        if (response && response.enabled !== undefined) {
+            muteEnabled = response.enabled;
+            console.log("[Content] Initial mute state loaded:", muteEnabled);
+        } else {
+            console.log("[Content] Using default state (OFF)"); 
+            muteEnabled = false; 
+        }
+    }
+);
 
 // ============================================================================
 // MESSAGE LISTENERS
 // ============================================================================
 
-
-// Get initial mute state from background script
+// Listen for state changes from popup or background
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "STATE_UPDATE") {
         muteEnabled = message.enabled;
-
-        if (muteEnabled) {
-            startMonitoring();
-        } else {
-            stopMonitoring();
+        console.log("[Content] State updated from background:", muteEnabled);
+        
+        // If extension was just disabled, unmute only if WE muted it
+        if (!muteEnabled && extensionMutedIt) {
+            const mainVideo = getMainVideoElement();
+            if (mainVideo && mainVideo.muted) {
+                mainVideo.muted = false;
+                extensionMutedIt = false;
+                console.log("[Content] Extension disabled - unmuted video");
+            }
         }
-
+        
         sendResponse({ status: "ok", currentState: muteEnabled });
     }
     return true;
@@ -108,24 +131,33 @@ function getMainVideoElement() {
 
 /**
  * Handle muting/unmuting based on ad status
+ * CRITICAL FIX: Only unmute if WE muted it, not if user muted it
  */
 function handleVideoMuting() {
-    if (!muteEnabled) return; 
+    if (!muteEnabled) return;  // Extension is OFF - do nothing
 
     const isAd = isAdPlaying();
     const mainVideo = getMainVideoElement();
     if (!mainVideo) return;
 
+    // CASE 1: Ad is playing and video is NOT muted → MUTE IT
     if (isAd && !mainVideo.muted) {
         mainVideo.muted = true;
-        console.log("[Content] Muted because ad detected");
+        extensionMutedIt = true; // ← Mark that WE muted it
+        console.log("[Content] ✓ Muted because ad detected");
     }
 
-    if (!isAd && mainVideo.muted) {
-        console.log("[Content] Leaving mute alone (user controls it)");
+    // CASE 2: Ad ended and WE muted it earlier → UNMUTE IT
+    // Only unmute if extensionMutedIt is true (meaning we're the ones who muted it)
+    if (!isAd && mainVideo.muted && extensionMutedIt) {
+        mainVideo.muted = false;
+        extensionMutedIt = false; // ← Reset flag
+        console.log("[Content] ✓ Unmuted because ad ended");
     }
+
+    // CASE 3: Ad ended but user manually muted → DO NOTHING
+    // If extensionMutedIt is false, user muted it manually, so leave it alone
 }
-
 
 // ============================================================================
 // MAIN MONITORING LOOP
@@ -133,27 +165,15 @@ function handleVideoMuting() {
 
 /**
  * Continuous monitoring of ad status
- * Checks every 500ms and mutes/unmutes accordingly
+ * Checks every 1200ms and mutes/unmutes accordingly
  */
-let monitoringInterval = null;
-
-function startMonitoring() {
-    if (monitoringInterval) return;
-
-    monitoringInterval = setInterval(() => {
+const monitoringInterval = setInterval(() => {
+    try {
         handleVideoMuting();
-    }, AD_CHECK_INTERVAL);
-
-    console.log("[Content] Monitoring STARTED");
-}
-
-function stopMonitoring() {
-    if (monitoringInterval) {
-        clearInterval(monitoringInterval);
-        monitoringInterval = null;
-        console.log("[Content] Monitoring STOPPED");
+    } catch (error) {
+        console.error("[Content] Error in monitoring loop:", error);
     }
-}
+}, AD_CHECK_INTERVAL);
 
 console.log("[Content] ✓ YouTube Smart Mute monitoring active (interval: " + AD_CHECK_INTERVAL + "ms)");
 
@@ -184,7 +204,7 @@ const observer = new MutationObserver((mutations) => {
             }
         }
 
-        if (shouldCheck && muteEnabled) {
+        if (shouldCheck) {
             console.log("[Content] DOM change detected, checking for ads...");
             handleVideoMuting();
         }
@@ -217,6 +237,48 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================================
+// DETECT USER MANUAL MUTE/UNMUTE
+// ============================================================================
+
+/**
+ * Listen for user clicking the mute button
+ * Reset our flag if user manually changes mute state
+ */
+function setupUserMuteDetection() {
+    const mainVideo = getMainVideoElement();
+    if (!mainVideo) return;
+
+    // Listen for volume/mute changes
+    mainVideo.addEventListener('volumechange', () => {
+        // If video gets unmuted and we had muted it, user is overriding us
+        if (!mainVideo.muted && extensionMutedIt) {
+            extensionMutedIt = false;
+            console.log("[Content] User manually unmuted - resetting flag");
+        }
+        
+        // If video gets muted while no ad is playing, user did it manually
+        if (mainVideo.muted && !isAdPlaying() && !extensionMutedIt) {
+            console.log("[Content] User manually muted - won't auto-unmute");
+        }
+    });
+}
+
+// Set up detection after a short delay to ensure video element exists
+setTimeout(setupUserMuteDetection, 1000);
+
+// Also re-setup when navigating to new video
+let lastUrl = location.href;
+new MutationObserver(() => {
+    const url = location.href;
+    if (url !== lastUrl) {
+        lastUrl = url;
+        extensionMutedIt = false; // Reset flag on new video
+        setTimeout(setupUserMuteDetection, 1000);
+        console.log("[Content] New video detected, reset state");
+    }
+}).observe(document, { subtree: true, childList: true });
+
+// ============================================================================
 // CLEANUP ON PAGE UNLOAD
 // ============================================================================
 
@@ -224,7 +286,36 @@ window.addEventListener('beforeunload', () => {
     console.log("[Content] Page unloading, cleaning up...");
     clearInterval(monitoringInterval);
     observer.disconnect();
+    extensionMutedIt = false; // Reset flag
 });
+
+// ============================================================================
+// FALLBACK: Force unmute if extension disabled
+// ============================================================================
+
+/**
+ * Additional safety check - unmute if extension is disabled AND we muted it
+ */
+function ensureUnmutedIfDisabled() {
+    if (!muteEnabled && extensionMutedIt) {
+        const videos = getVideoElements();
+        videos.forEach(video => {
+            try {
+                if (video.muted) {
+                    video.muted = false;
+                    extensionMutedIt = false;
+                    console.log("[Content] Safety unmute - extension is disabled");
+                }
+            } catch (e) {
+                // Silently ignore
+            }
+        });
+    }
+}
+
+// Run periodically as safety net
+setInterval(ensureUnmutedIfDisabled, 2000);
+
 // ============================================================================
 // INITIAL STATUS
 // ============================================================================
