@@ -40,7 +40,6 @@
                 });
             }
             
-            console.log('YouTube Smart Mute initialized - Default state: OFF');
         } catch (error) {
             console.error('Error initializing extension:', error);
         }
@@ -211,4 +210,3 @@
         }
     });
 
-    console.log('YouTube Smart Mute background service worker loaded - Default state: OFF');
