@@ -157,6 +157,9 @@ function handleVideoMuting() {
 
     // CASE 3: Ad ended but user manually muted → DO NOTHING
     // If extensionMutedIt is false, user muted it manually, so leave it alone
+    if (!isAd && mainVideo.muted && !extensionMutedIt) {
+        console.log("[Content] Ad ended but video is still muted (user likely muted it) - leaving as is");
+    }
 }
 
 // ============================================================================
