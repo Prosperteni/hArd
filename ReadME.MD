@@ -1,6 +1,6 @@
-# hArd — YouTube automatic Ad mute extension?`
+# Quietly — YouTube automatic Ad mute extension?`
 
-**hArd** is a Chrome extension that automatically detects YouTube ads and mutes them in real time and then restores audio for normal video playback.
+**Quietly** is a Chrome extension that automatically detects YouTube ads and mutes them in real time and then restores audio for normal video playback.
 
 It runs entirely on the client side and requires no external servers.
 
@@ -31,7 +31,7 @@ It runs entirely on the client side and requires no external servers.
 
 ## Project Structure?>
 ```bash
-hArd/
+Quietly/
 │
 ├── manifest.json
 ├── background.js
